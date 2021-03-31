@@ -32,9 +32,7 @@ router.post('/register',async (ctx)=>{
         .then(async (result)=>{
             let res = JSON.parse(result)
             let openId = res.openid;
-            //let token = generateToken(res.openid)
             let token = generateToken(username,phone,email)
-            //return ctx.loginsend(token);
             let obj = new Object();
             obj.token = token;
             obj.power = power;
@@ -52,19 +50,15 @@ router.post('/register',async (ctx)=>{
                 power:obj.power,
                 openId:obj.openId,
             }
-            console.log("openid"+openId)
             let query = `INSERT INTO mini_program(token,power,openId) VALUES(?,?,?)`
             await db.insert(query,[token,power,openId])
                 .then(async (result)=>{
-                    console.log(result);
                     return await ctx.send(result);
                 })
             }
         )
         .catch((err)=>{
-            console.log(err)
             return ctx.sendError('101', err.message);
-            // if(err) throw err;
         })
 })
 
