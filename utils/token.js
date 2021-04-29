@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken')
 const privateKey = fs.readFileSync('./pem/private.key')
 const publicKey = fs.readFileSync('./pem/public.key')
 
-function generateToken(username,phone,email) {
-    let payload = {username: username,phone:phone,email:email}
-    if (username&&phone&&email) {
+function generateToken(openid) {
+    let payload = {openid: openid}
+    if (openid) {
         const tokenRS256 = jwt.sign(payload, privateKey, {expiresIn: '7 days', algorithm: 'RS256'})
         return tokenRS256
     } else {
