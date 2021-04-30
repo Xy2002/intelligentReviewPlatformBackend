@@ -4,22 +4,6 @@ const router = new Router();
 const {generateToken, verifyToken} = require('../utils/token')
 const {getOpenId} = require('../utils/getOpenId')
 
-
-router.post('/getToken', async (ctx) => {
-    let req = ctx.request.body;
-    let code = req.code;
-    await getOpenId(code)
-        .then(async (result) => {
-            let res = JSON.parse(result)
-            let openId = res.openid;
-            //sessionkey = res.sessionkey
-            let token = generateToken(openId)
-            console.log(token)
-            return ctx.loginsend(token);
-        })
-})
-
-
 router.post('/perfectInformation', async (ctx) => {
     let req = ctx.request.body;
     let {
