@@ -11,12 +11,12 @@ const sendHandle = () => {
     }
 
     const loginrender = ctx => {
-        return (data, msg = '登录成功') => {
+        return (data, msg = '获取Token成功') => {
             ctx.set('Content-Type', 'application/json');
             ctx.body = {
                 code: 100,
                 msg: msg,
-                info: data
+                token: data
             }
         }
     }

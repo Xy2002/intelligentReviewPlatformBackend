@@ -14,7 +14,7 @@ router.post('/getToken', async (ctx) => {
             let openId = res.openid;
             let token = generateToken(openId)
             console.log(token)
-            return ctx.loginsend(token);
+            return ctx.loginsend(token, res);
         })
 })
 

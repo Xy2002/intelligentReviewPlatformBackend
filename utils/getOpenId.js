@@ -14,6 +14,7 @@ function getOpenId(code) {
         request(options, function (error, response) {
             //if (error) throw new Error(error);
             if (error) reject(error)
+            console.log(response.body)
             resolve(response.body);
         });
     })

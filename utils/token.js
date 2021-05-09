@@ -6,7 +6,7 @@ const publicKey = fs.readFileSync('./pem/public.key')
 function generateToken(openid) {
     let payload = {openid: openid}
     if (openid) {
-        return jwt.sign(payload, privateKey, {expiresIn: '7 days', algorithm: 'RS256'})
+        return jwt.sign(payload, privateKey, {expiresIn: '31 days', algorithm: 'RS256'})
     } else {
         throw new Error("openId is null")
     }

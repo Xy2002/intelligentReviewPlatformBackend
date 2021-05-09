@@ -17,6 +17,23 @@ connection.connect(function (err) {
 
     console.log('连接成功 id ' + connection.threadId);
 });
+
+connection.on("error", function (err) {
+    console.log("db error", err);
+    // 如果是连接断开，自动重新连接
+    if (err.code === "PROTOCOL_CONNECTION_LOST") {
+        connection.connect(function (err) {
+            if (err) {
+                console.error('连接失败: ' + err.stack);
+                return;
+            }
+            console.log('连接成功 id ' + connection.threadId);
+        });
+    } else {
+        throw err;
+    }
+});
+
 //SELECT * FROM t_user WHERE username = "whg"
 db.find = (query) => {
     return new Promise((resolve, reject) => {
