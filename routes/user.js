@@ -13,7 +13,7 @@ router.post('/getDetails', async (ctx) => {
         return ctx.sendError('100', 'token已过期，请重新生成')
     } else {
         let openid = res.openid
-        let query = `SELECT * FROM user WHERE openid = "${openid}"`
+        let query = `SELECT * FROM User WHERE openid = "${openid}"`
         await db.find(query)
             .then(async result => {
                 return ctx.send(result)
@@ -33,27 +33,29 @@ router.post('/addDetails', async (ctx) => {
         phone,
         email,
         token,
-        teacher
+        power
     } = {
         username: req.username,
         avatar: req.avatar,
         phone: req.phone,
         email: req.email,
         token: req.token,
-        teacher: req.teacher
+        power: req.power
     }
     const [err, res] = await to(verifyToken(token))
     if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
     } else {
-        let openid = res.openid;
-        let query = `INSERT INTO user(username,avatar,phone,email,openid,teacher) VALUES(?,?,?,?,?,?)`
-        await db.insert(query, [username, avatar, phone, email, openid, teacher])
+        console.log(res)
+        let openid = res.openid
+        let query = `INSERT INTO User(username,avatar,phone,email,power,openid) VALUES(?,?,?,?,?,?)`
+        await db.insert(query, [username, avatar, phone, email, power, openid])
             .then(async (result) => {
                 console.log(result)
                 return ctx.send(result)
             })
             .catch((err) => {
+                console.log(err)
                 return ctx.sendError('101', "该openid已存在，请不要重复注册");
             })
     }

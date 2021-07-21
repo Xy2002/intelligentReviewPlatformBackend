@@ -4,7 +4,8 @@ let connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'Xy020614@',
-    database: 'miniprogram'
+    database: 'miniprogram',
+    timezone: 'Asia/Shanghai'
 })
 
 let db = {};

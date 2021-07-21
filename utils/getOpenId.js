@@ -1,6 +1,6 @@
 const request = require('request')
 const appid = 'wx43a3698c6bac5555'
-const secret = '5f078dc3730df85b3d20025fdaa65a90'
+const secret = '25ccfb71bd15ea057fa753735ddd1b7e'
 const grant_type = 'authorization_code'
 
 function getOpenId(code) {

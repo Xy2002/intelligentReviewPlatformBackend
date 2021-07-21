@@ -7,12 +7,16 @@ const {getOpenId} = require('../utils/getOpenId')
 
 router.post('/getToken', async (ctx) => {
     let req = ctx.request.body;
+    console.log(req)
     let code = req.code;
+    console.log(code)
     await getOpenId(code)
         .then(async (result) => {
             let res = JSON.parse(result)
+            console.log(res)
             let openId = res.openid;
-            let token = generateToken(openId)
+            let sessionKey = res.session_key
+            let token = generateToken(openId,sessionKey)
             console.log(token)
             return ctx.loginsend(token, res);
         })
