@@ -72,15 +72,6 @@ router.post('/addProject', async (ctx) => {
                     return ctx.sendError('101', err)
                 })
         })
-        // await db.insert(query, [username, avatar, phone, email, power, openid])
-        //     .then(async (result) => {
-        //         console.log(result)
-        //         return ctx.send(result)
-        //     })
-        //     .catch((err) => {
-        //         console.log(err)
-        //         return ctx.sendError('101', "该openid已存在，请不要重复注册");
-        //     })
     }
 })
 
@@ -111,7 +102,7 @@ router.post('/getProjectDetailInfo',async (ctx)=>{
                     return ctx.send(res)
                 }
             } catch (e) {
-                return ctx.sendError('101', err)
+                return ctx.sendError('101', e)
             }
         })
             .catch(async err => {
@@ -124,6 +115,7 @@ router.post('/getProjectDetailInfo',async (ctx)=>{
 //UPDATE Person SET FirstName = 'Fred' WHERE LastName = 'Wilson'
 router.post('/updateProject', async (ctx) => {
     let req = ctx.request.body;
+    console.log(req)
     let {
         matchName,
         description,
@@ -141,7 +133,7 @@ router.post('/updateProject', async (ctx) => {
         matchID:req.matchID,
         token: req.token
     }
-    console.log(req)
+    console.log(JSON.stringify(req.matchOptions).toString())
     const [err, res] = await to(verifyToken(token))
     if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
@@ -149,19 +141,27 @@ router.post('/updateProject', async (ctx) => {
         let openid = res.openid
         let query = `SELECT id FROM User WHERE openid = "${openid}"`
         await db.find(query).then(async result => {
-            let id = result[0].id
-
-            //UPDATE t_user SET pass = "321" WHERE username = "whg"
-            let query = `UPDATE MatchInfo SET matchName="${matchName}",description="${description}",startTime="${startTime}",creatorName="${creatorName}",matchOptions="${matchOptions}" WHERE id="${matchID}"`
-            await db.update(query)
-                .then(async (result) => {
-                    console.log(result)
-                    return ctx.send(result)
-                })
-                .catch(async (err) => {
-                    console.log(err)
-                    return ctx.sendError('101', err)
-                })
+            let userID = result[0].id
+            let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
+            try {
+                let res = await db.find(query2);
+                if(res[0].creatorID !== userID){
+                    return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
+                }else{
+                    let query = `UPDATE MatchInfo SET matchName="${matchName}",description="${description}",startTime="${startTime}",creatorName="${creatorName}",matchOptions='${matchOptions}' WHERE id="${matchID}"`
+                    try{
+                        let result = await db.update(query)
+                        console.log(result)
+                        return ctx.send(result)
+                    }catch (e) {
+                        console.log(e)
+                        return ctx.sendError('101', e)
+                    }
+                }
+            }
+            catch (e) {
+                return ctx.sendError('101', e)
+            }
         })
     }
 })
