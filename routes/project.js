@@ -166,5 +166,46 @@ router.post('/updateProject', async (ctx) => {
     }
 })
 
+router.post('/endProject',async (ctx)=>{
+    let req = ctx.request.body;
+    console.log(req)
+    let {
+        matchID,
+        token
+    } = {
+        matchID:req.matchID,
+        token: req.token
+    }
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            let userID = result[0].id
+            let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
+            try {
+                let res = await db.find(query2);
+                if(res[0].creatorID !== userID){
+                    return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
+                }else{
+                    let query = `UPDATE MatchInfo SET status="1" WHERE id="${matchID}"`
+                    try{
+                        let result = await db.update(query)
+                        console.log(result)
+                        return ctx.send(result)
+                    }catch (e) {
+                        console.log(e)
+                        return ctx.sendError('101', e)
+                    }
+                }
+            }
+            catch (e) {
+                return ctx.sendError('101', e)
+            }
+        })
+    }
+})
 
 module.exports = router.routes();
