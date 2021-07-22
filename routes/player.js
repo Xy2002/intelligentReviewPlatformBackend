@@ -4,10 +4,19 @@ const router = new Router();
 const {verifyToken} = require('../utils/token')
 const to = require('await-to-js').default
 
-router.post('/getCreatedProject', async (ctx) => {
-    let req = ctx.request.body;
-    let {token} = {token: req.token}
-    // if (token) {
+router.post('/addPlayer',async (ctx)=>{
+    let req = ctx.request.body
+    let {
+        matchID,
+        playerName,
+        projectName,
+        token
+    }={
+        matchID:req.matchID,
+        playerName:req.playerName,
+        projectName:req.projectName,
+        token:req.token
+    }
     const [err, res] = await to(verifyToken(token))
     if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
@@ -15,68 +24,33 @@ router.post('/getCreatedProject', async (ctx) => {
         let openid = res.openid
         let query = `SELECT id FROM User WHERE openid = "${openid}"`
         await db.find(query).then(async result => {
-            let id = result[0].id
-            let query2 = `SELECT id,matchName,creatorName,startTime,status FROM MatchInfo WHERE creatorID = "${id}"`
+            let userID = result[0].id
+            let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
-                return ctx.send(res)
-            } catch (e) {
-                return ctx.sendError('101', err)
+                if(res[0].creatorID !== userID){
+                    return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
+                }else{
+                    let query = `INSERT INTO Project(playerName,projectName,matchID) VALUES (?,?,?) `
+                    try{
+                        let result = await db.insert(query,[playerName,projectName,matchID])
+                        console.log(result)
+                        return ctx.send(result)
+                    }catch (e) {
+                        console.log(e)
+                        return ctx.sendError('101', e)
+                    }
+                }
+            }
+            catch (e) {
+                return ctx.sendError('101', e)
             }
         })
-            .catch(async err => {
-                return ctx.sendError('101', '未在数据库查找到相关记录')
-            })
-    }
-    // }
-})
-
-router.post('/addProject', async (ctx) => {
-    let req = ctx.request.body;
-    let {
-        matchName,
-        status,
-        description,
-        startTime,
-        code,
-        creatorName,
-        matchOptions,
-        token
-    } = {
-        matchName: req.matchName,
-        status: req.status,
-        description: req.description,
-        startTime: req.startTime,
-        code: req.code,
-        creatorName: req.creatorName,
-        matchOptions: JSON.stringify(req.matchOptions),
-        token: req.token
-    }
-    console.log(req)
-    const [err, res] = await to(verifyToken(token))
-    if (err) {
-        return ctx.sendError('100', 'token已过期，请重新生成')
-    } else {
-        let openid = res.openid
-        let query = `SELECT id FROM User WHERE openid = "${openid}"`
-        await db.find(query).then(async result => {
-            let id = result[0].id
-            let query = `INSERT INTO MatchInfo(matchName,creatorID,matchOptions,status,description,startTime,code,creatorName) VALUES(?,?,?,?,?,?,?,?)`
-            await db.insert(query, [matchName, id, matchOptions, status, description, startTime, code, creatorName])
-                .then(async (result) => {
-                    console.log(result)
-                    return ctx.send(result)
-                })
-                .catch(async (err) => {
-                    console.log(err)
-                    return ctx.sendError('101', err)
-                })
-        })
     }
 })
 
-router.post('/getProjectDetailInfo',async (ctx)=>{
-    let req = ctx.request.body;
+router.post('/getPlayerList',async (ctx)=>{
+    let req = ctx.request.body
     let {
         matchID,
         token
@@ -85,9 +59,9 @@ router.post('/getProjectDetailInfo',async (ctx)=>{
         token:req.token
     }
     const [err, res] = await to(verifyToken(token))
-    if(err){
+    if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
-    }else{
+    } else {
         let openid = res.openid
         let query = `SELECT id FROM User WHERE openid = "${openid}"`
         await db.find(query).then(async result => {
@@ -98,42 +72,38 @@ router.post('/getProjectDetailInfo',async (ctx)=>{
                 if(res[0].creatorID !== userID){
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 }else{
-                    res[0].matchOptions = JSON.parse(res[0].matchOptions)
-                    return ctx.send(res)
+                    let query = `SELECT * From Project WHERE MatchID=${matchID}`
+                    try{
+                        let result = await db.find(query)
+                        console.log(result)
+                        return ctx.send(result)
+                    }catch (e) {
+                        console.log(e)
+                        return ctx.sendError('101', e)
+                    }
                 }
-            } catch (e) {
+            }
+            catch (e) {
                 return ctx.sendError('101', e)
             }
         })
-            .catch(async err => {
-                return ctx.sendError('101', '未在数据库查找到相关记录')
-            })
-
     }
 })
 
-//UPDATE Person SET FirstName = 'Fred' WHERE LastName = 'Wilson'
-router.post('/updateProject', async (ctx) => {
+router.post('/updatePlayer', async (ctx) => {
     let req = ctx.request.body;
     console.log(req)
     let {
-        matchName,
-        description,
-        startTime,
-        creatorName,
-        matchOptions,
         matchID,
+        playerName,
+        projectName,
         token
-    } = {
-        matchName: req.matchName,
-        description: req.description,
-        startTime: req.startTime,
-        creatorName: req.creatorName,
-        matchOptions: JSON.stringify(req.matchOptions),
+    }={
         matchID:req.matchID,
-        token: req.token
+        playerName:req.playerName,
+        projectName:req.projectName,
+        token:req.token
     }
-    console.log(JSON.stringify(req.matchOptions).toString())
     const [err, res] = await to(verifyToken(token))
     if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
@@ -148,7 +118,7 @@ router.post('/updateProject', async (ctx) => {
                 if(res[0].creatorID !== userID){
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 }else{
-                    let query = `UPDATE MatchInfo SET matchName="${matchName}",description="${description}",startTime="${startTime}",creatorName="${creatorName}",matchOptions='${matchOptions}' WHERE id="${matchID}"`
+                    let query = `UPDATE Project SET playerName="${playerName}",projectName="${projectName}" WHERE matchID="${matchID}"`
                     try{
                         let result = await db.update(query)
                         console.log(result)
@@ -166,15 +136,17 @@ router.post('/updateProject', async (ctx) => {
     }
 })
 
-router.post('/endProject',async (ctx)=>{
+router.post('/deletePlayer', async (ctx) => {
     let req = ctx.request.body;
     console.log(req)
     let {
+        id,
         matchID,
         token
-    } = {
+    }={
+        id:req.id,
         matchID:req.matchID,
-        token: req.token
+        token:req.token
     }
     const [err, res] = await to(verifyToken(token))
     if (err) {
@@ -190,9 +162,9 @@ router.post('/endProject',async (ctx)=>{
                 if(res[0].creatorID !== userID){
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 }else{
-                    let query = `UPDATE MatchInfo SET status="1" WHERE id="${matchID}"`
+                    let query = `DELETE FROM Project WHERE id="${id}"`
                     try{
-                        let result = await db.update(query)
+                        let result = await db.delete(query)
                         console.log(result)
                         return ctx.send(result)
                     }catch (e) {
@@ -207,6 +179,5 @@ router.post('/endProject',async (ctx)=>{
         })
     }
 })
-
 
 module.exports = router.routes();
