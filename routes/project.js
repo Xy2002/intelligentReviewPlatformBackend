@@ -71,7 +71,7 @@ router.post('/addProject', async (ctx) => {
                     console.log(err)
                     return ctx.sendError('101', err)
                 })
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 
@@ -162,7 +162,7 @@ router.post('/updateProject', async (ctx) => {
             catch (e) {
                 return ctx.sendError('101', e)
             }
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 
@@ -204,7 +204,7 @@ router.post('/endProject',async (ctx)=>{
             catch (e) {
                 return ctx.sendError('101', e)
             }
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 

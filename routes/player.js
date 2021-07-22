@@ -44,7 +44,7 @@ router.post('/addPlayer', async (ctx) => {
             } catch (e) {
                 return ctx.sendError('101', e)
             }
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 
@@ -87,12 +87,14 @@ router.post('/updatePlayer', async (ctx) => {
         matchID,
         playerName,
         projectName,
-        token
+        token,
+        id
     } = {
         matchID: req.matchID,
         playerName: req.playerName,
         projectName: req.projectName,
-        token: req.token
+        token: req.token,
+        id:req.id
     }
     const [err, res] = await to(verifyToken(token))
     if (err) {
@@ -108,7 +110,7 @@ router.post('/updatePlayer', async (ctx) => {
                 if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 } else {
-                    let query = `UPDATE Project SET playerName="${playerName}",projectName="${projectName}" WHERE matchID="${matchID}"`
+                    let query = `UPDATE Project SET playerName="${playerName}",projectName="${projectName}" WHERE id="${id}"`
                     try {
                         let result = await db.update(query)
                         console.log(result)
@@ -121,7 +123,7 @@ router.post('/updatePlayer', async (ctx) => {
             } catch (e) {
                 return ctx.sendError('101', e)
             }
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 
@@ -164,7 +166,7 @@ router.post('/deletePlayer', async (ctx) => {
             } catch (e) {
                 return ctx.sendError('101', e)
             }
-        })
+        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
     }
 })
 
