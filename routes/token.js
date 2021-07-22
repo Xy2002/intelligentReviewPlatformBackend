@@ -29,5 +29,12 @@ router.post('/tokenGetInfo', async (ctx) => {
     console.log(openid)
 })
 
+router.get('/generateRandomToken',async (ctx)=>{
+    let openId = "123123";
+    let sessionKey = "123123"
+    let token = generateToken(openId,sessionKey)
+    console.log(token)
+    return ctx.loginsend(token, "123");
+})
 
 module.exports = router.routes();
