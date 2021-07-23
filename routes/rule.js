@@ -10,11 +10,13 @@ router.post('/addRule', async (ctx) => {
         matchID,
         ruleName,
         maxScore,
+        minScore,
         token
     } = {
         matchID: req.matchID,
         ruleName: req.ruleName,
         maxScore: req.maxScore,
+        minScore: req.minScore,
         token: req.token
     }
     const [err, res] = await to(verifyToken(token))
@@ -31,9 +33,9 @@ router.post('/addRule', async (ctx) => {
                 if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 } else {
-                    let query = `INSERT INTO Rule(maxScore,ruleName,matchID) VALUES (?,?,?) `
+                    let query = `INSERT INTO Rule(maxScore,minScore,ruleName,matchID) VALUES (?,?,?) `
                     try {
-                        let result = await db.insert(query, [maxScore, ruleName, matchID])
+                        let result = await db.insert(query, [maxScore, minScore, ruleName, matchID])
                         console.log(result)
                         return ctx.send(result)
                     } catch (e) {
@@ -86,12 +88,14 @@ router.post('/updateRule', async (ctx) => {
     let {
         matchID,
         maxScore,
+        minScore,
         ruleName,
         token,
         id
     } = {
         matchID: req.matchID,
         maxScore: req.maxScore,
+        minScore: req.minScore,
         ruleName: req.ruleName,
         token: req.token,
         id:req.id
@@ -110,7 +114,7 @@ router.post('/updateRule', async (ctx) => {
                 if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 } else {
-                    let query = `UPDATE Rule SET maxScore="${maxScore}",ruleName="${ruleName}" WHERE id="${id}"`
+                    let query = `UPDATE Rule SET maxScore="${maxScore}",minScore="${minScore}",ruleName="${ruleName}" WHERE id="${id}"`
                     try {
                         let result = await db.update(query)
                         console.log(result)

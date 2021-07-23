@@ -71,23 +71,25 @@ router.post('/addProject', async (ctx) => {
                     console.log(err)
                     return ctx.sendError('101', err)
                 })
-        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
+        }).catch(err => {
+            return ctx.sendError('101', "你不是本系统的用户，请不要试图越权操作！")
+        })
     }
 })
 
-router.post('/getProjectDetailInfo',async (ctx)=>{
+router.post('/getProjectDetailInfo', async (ctx) => {
     let req = ctx.request.body;
     let {
         matchID,
         token
-    }={
-        matchID:req.matchID,
-        token:req.token
+    } = {
+        matchID: req.matchID,
+        token: req.token
     }
     const [err, res] = await to(verifyToken(token))
-    if(err){
+    if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
-    }else{
+    } else {
         let openid = res.openid
         let query = `SELECT id FROM User WHERE openid = "${openid}"`
         await db.find(query).then(async result => {
@@ -95,9 +97,9 @@ router.post('/getProjectDetailInfo',async (ctx)=>{
             let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
-                if(res[0].creatorID !== userID){
+                if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
-                }else{
+                } else {
                     res[0].matchOptions = JSON.parse(res[0].matchOptions)
                     return ctx.send(res)
                 }
@@ -130,7 +132,7 @@ router.post('/updateProject', async (ctx) => {
         startTime: req.startTime,
         creatorName: req.creatorName,
         matchOptions: JSON.stringify(req.matchOptions),
-        matchID:req.matchID,
+        matchID: req.matchID,
         token: req.token
     }
     console.log(JSON.stringify(req.matchOptions).toString())
@@ -145,35 +147,36 @@ router.post('/updateProject', async (ctx) => {
             let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
-                if(res[0].creatorID !== userID){
+                if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
-                }else{
+                } else {
                     let query = `UPDATE MatchInfo SET matchName="${matchName}",description="${description}",startTime="${startTime}",creatorName="${creatorName}",matchOptions='${matchOptions}' WHERE id="${matchID}"`
-                    try{
+                    try {
                         let result = await db.update(query)
                         console.log(result)
                         return ctx.send(result)
-                    }catch (e) {
+                    } catch (e) {
                         console.log(e)
                         return ctx.sendError('101', e)
                     }
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 return ctx.sendError('101', e)
             }
-        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
+        }).catch(err => {
+            return ctx.sendError('101', "你不是本系统的用户，请不要试图越权操作！")
+        })
     }
 })
 
-router.post('/endProject',async (ctx)=>{
+router.post('/endProject', async (ctx) => {
     let req = ctx.request.body;
     console.log(req)
     let {
         matchID,
         token
     } = {
-        matchID:req.matchID,
+        matchID: req.matchID,
         token: req.token
     }
     const [err, res] = await to(verifyToken(token))
@@ -187,25 +190,72 @@ router.post('/endProject',async (ctx)=>{
             let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
-                if(res[0].creatorID !== userID){
+                if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
-                }else{
+                } else {
                     let query = `UPDATE MatchInfo SET status="1" WHERE id="${matchID}"`
-                    try{
+                    try {
                         let result = await db.update(query)
                         console.log(result)
                         return ctx.send(result)
-                    }catch (e) {
+                    } catch (e) {
                         console.log(e)
                         return ctx.sendError('101', e)
                     }
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 return ctx.sendError('101', e)
             }
-        }).catch(err => {return ctx.sendError('101',"你不是本系统的用户，请不要试图越权操作！")})
+        }).catch(err => {
+            return ctx.sendError('101', "你不是本系统的用户，请不要试图越权操作！")
+        })
     }
+})
+
+router.post('/joinProject', async (ctx) => {
+
+    let req = ctx.request.body;
+    let {
+        code,
+        token
+    } = {
+        code: req.code,
+        token: req.token
+    }
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            let query2 = `SELECT * FROM MatchInfo WHERE code = "${code}"`
+            try {
+                let res = await db.find(query2);
+                let matchID = res[0].id
+                let query3 = `SELECT * FROM Project WHERE matchID = "${matchID}"`
+                let query4 = `SELECT * FROM Rule WHERE matchID = "${matchID}"`
+                let res2 = await db.find(query3)
+                let res3 = await db.find(query4)
+                console.log(res, res2, res3)
+                let newObj={}
+                res[0].matchOptions = JSON.parse(res[0].matchOptions)
+                newObj.matchInfo = res[0]
+                newObj.projectInfo = res2
+                newObj.ruleInfo = res3
+                return ctx.send(newObj)
+
+            } catch (e) {
+                console.log(e)
+                return ctx.sendError('101', e.message)
+            }
+        })
+            .catch(async err => {
+                return ctx.sendError('101', '未在数据库查找到相关记录')
+            })
+
+    }
+
 })
 
 module.exports = router.routes();
