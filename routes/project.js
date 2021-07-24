@@ -114,6 +114,73 @@ router.post('/getProjectDetailInfo', async (ctx) => {
     }
 })
 
+router.post('/getMyProject', async (ctx)=>{
+    let req = ctx.request.body
+    let {
+        token
+    } = {
+        token: req.token
+    }
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            try {
+                let userID = result[0].id
+                try {
+                    let query4 = `select projectID from MatchData where userID="${userID}"`
+                    let result2 = await db.find(query4)
+                    let tempArr = []
+                    result2.forEach(function (item) {
+                        tempArr.push(item.projectID)
+                    })
+                    Array.prototype.method1 = function(){
+                        var arr=[];    //定义一个临时数组
+                        for(var i = 0; i < this.length; i++){    //循环遍历当前数组
+                            //判断当前数组下标为i的元素是否已经保存到临时数组
+                            //如果已保存，则跳过，否则将此元素保存到临时数组中
+                            if(arr.indexOf(this[i]) == -1){
+                                arr.push(this[i]);
+                            }
+                        }
+                        return arr;
+                    }
+                    let Arr = tempArr.method1()
+                    let resArr
+                    let tempArr2 = []
+                    for (const item of Arr) {
+                        let query = `select matchID from Project where id=${item}`
+                        let tempRes = await db.find(query)
+                        tempArr2.push(tempRes[0].matchID)
+                    }
+                    resArr = tempArr2.method1()
+                    console.log(resArr)
+                    let resArr2=[]
+                    for(const item of resArr){
+                        let query = `select * from MatchInfo where id=${item}`
+                        let tempRes = await db.find(query)
+                        tempRes[0].matchOptions = JSON.parse(tempRes[0].matchOptions)
+                        console.log(tempRes)
+                        resArr2.push(tempRes[0])
+                    }
+                    return ctx.send(resArr2)
+                } catch (e) {
+                    console.log(e)
+                    return ctx.sendError('101', e.message)
+                }
+            } catch (e) {
+                return ctx.sendError('101', e.message)
+            }
+        }).catch(async err => {
+            return ctx.sendError('101', "你不是本系统的用户，请不要试图越权操作！")
+        })
+    }
+})
+
+
 //UPDATE Person SET FirstName = 'Fred' WHERE LastName = 'Wilson'
 router.post('/updateProject', async (ctx) => {
     let req = ctx.request.body;
