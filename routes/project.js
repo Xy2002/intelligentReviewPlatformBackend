@@ -213,7 +213,6 @@ router.post('/endProject', async (ctx) => {
 })
 
 router.post('/joinProject', async (ctx) => {
-
     let req = ctx.request.body;
     let {
         code,
@@ -222,6 +221,7 @@ router.post('/joinProject', async (ctx) => {
         code: req.code,
         token: req.token
     }
+    console.log(code)
     const [err, res] = await to(verifyToken(token))
     if (err) {
         return ctx.sendError('100', 'token已过期，请重新生成')
@@ -258,4 +258,45 @@ router.post('/joinProject', async (ctx) => {
 
 })
 
+router.post('/checkProject',async (ctx)=>{
+    let req = ctx.request.body;
+    let {
+        code,
+        token
+    } = {
+        code: req.code,
+        token: req.token
+    }
+    console.log(code)
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            let query2 = `SELECT * FROM MatchInfo WHERE code = "${code}"`
+            try {
+                let result = await db.find(query2)
+                console.log(result.length)
+                if(result.length === 0){
+                    return ctx.sendError('101','该比赛不存在！')
+                }else{
+                    if(new Date()-new Date(result[0].startTime) >= 0){
+                        return ctx.send('true')
+                    }else{
+                        return ctx.sendError('101','该比赛未开始！')
+                    }
+                }
+            } catch (e) {
+                console.log(e)
+                return ctx.sendError('101', e.message)
+            }
+        })
+            .catch(async err => {
+                return ctx.sendError('101', '未在数据库查找到相关记录')
+            })
+
+    }
+})
 module.exports = router.routes();

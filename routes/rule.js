@@ -33,7 +33,7 @@ router.post('/addRule', async (ctx) => {
                 if (res[0].creatorID !== userID) {
                     return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
                 } else {
-                    let query = `INSERT INTO Rule(maxScore,minScore,ruleName,matchID) VALUES (?,?,?) `
+                    let query = `INSERT INTO Rule(maxScore,minScore,ruleName,matchID) VALUES (?,?,?,?) `
                     try {
                         let result = await db.insert(query, [maxScore, minScore, ruleName, matchID])
                         console.log(result)
