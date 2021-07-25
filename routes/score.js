@@ -207,4 +207,61 @@ router.post('/updateScore', async (ctx) => {
     }
 })
 
+router.post('/getMatchScore', async (ctx)=>{
+    let req = ctx.request.body;
+    let {
+        code,
+        token
+    } = {
+        code: req.code,
+        token: req.token
+    }
+    // console.log(code)
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            let query2 = `SELECT * FROM MatchInfo WHERE code = "${code}"`
+            try {
+                let result1 = await db.find(query2)
+                if(result1.length === 0){
+                    return ctx.sendError("101","该比赛不存在")
+                }
+                // console.log(JSON.parse(result1[0].matchOptions))
+                let isReadRank = JSON.parse(result1[0].matchOptions).readRank
+                let creatorID = result1[0].creatorID
+                // console.log(isReadRank,creatorID)
+                let flag
+                if(isReadRank){
+                    flag = true
+                }else{
+                    flag = creatorID === result[0].id;
+                }
+                if(flag===true){
+                    let matchID = result1[0].id
+                    let query3 = `select * from MatchData where projectID in (select id from Project where matchID="${matchID}")`
+                    let res3 = await db.find(query3)
+                    for (const item of res3) {
+                        let query4 = `select playerName from Project where id="${item.projectID}"`
+                        let res4 = await db.find(query4)
+                        item.playerName = res4[0].playerName
+                    }
+                    return ctx.send(res3)
+                }else{
+                    return ctx.sendError('101',"无权进行此操作")
+                }
+            } catch (e) {
+                console.log(e)
+                return ctx.sendError('101', e.message)
+            }
+        })
+            .catch(async err => {
+                return ctx.sendError('101', '未在数据库查找到相关记录')
+            })
+    }
+})
+
 module.exports = router.routes();

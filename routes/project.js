@@ -366,4 +366,48 @@ router.post('/checkProject',async (ctx)=>{
 
     }
 })
+
+router.post('/canICheckProject',async (ctx)=>{
+    let req = ctx.request.body;
+    let {
+        code,
+        token
+    } = {
+        code: req.code,
+        token: req.token
+    }
+    console.log(code)
+    const [err, res] = await to(verifyToken(token))
+    if (err) {
+        return ctx.sendError('100', 'token已过期，请重新生成')
+    } else {
+        let openid = res.openid
+        let query = `SELECT id FROM User WHERE openid = "${openid}"`
+        await db.find(query).then(async result => {
+            let query2 = `SELECT * FROM MatchInfo WHERE code = "${code}"`
+            try {
+                let result1 = await db.find(query2)
+                // console.log(JSON.parse(result1[0].matchOptions))
+                let isReadRank = JSON.parse(result1[0].matchOptions).readRank
+                let creatorID = result1[0].creatorID
+                // console.log(isReadRank,creatorID)
+                if(isReadRank){
+                    ctx.send(true)
+                }else{
+                    if(creatorID !== result[0].id){
+                        ctx.send(false)
+                    }else{
+                        ctx.send(true)
+                    }
+                }
+            } catch (e) {
+                console.log(e)
+                return ctx.sendError('101', e.message)
+            }
+        })
+            .catch(async err => {
+                return ctx.sendError('101', '未在数据库查找到相关记录')
+            })
+    }
+})
 module.exports = router.routes();
