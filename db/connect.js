@@ -1,6 +1,7 @@
 const mysql = require('mysql')
 
-let connection = mysql.createConnection({
+let connection = mysql.createPool({
+    connectionLimit : 10,
     host: 'localhost',
     user: 'root',
     password: 'Xy020614@',
