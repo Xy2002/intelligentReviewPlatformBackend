@@ -97,12 +97,9 @@ router.post('/getProjectDetailInfo', async (ctx) => {
             let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
-                if (res[0].creatorID !== userID) {
-                    return ctx.sendError('101', "赛事创建者不是你！请不要越权操作。")
-                } else {
-                    res[0].matchOptions = JSON.parse(res[0].matchOptions)
-                    return ctx.send(res)
-                }
+                res[0].matchOptions = JSON.parse(res[0].matchOptions)
+                return ctx.send(res)
+
             } catch (e) {
                 return ctx.sendError('101', e)
             }
@@ -114,7 +111,7 @@ router.post('/getProjectDetailInfo', async (ctx) => {
     }
 })
 
-router.post('/getMyProject', async (ctx)=>{
+router.post('/getMyProject', async (ctx) => {
     let req = ctx.request.body
     let {
         token
@@ -137,12 +134,12 @@ router.post('/getMyProject', async (ctx)=>{
                     result2.forEach(function (item) {
                         tempArr.push(item.projectID)
                     })
-                    Array.prototype.method1 = function(){
-                        var arr=[];    //定义一个临时数组
-                        for(var i = 0; i < this.length; i++){    //循环遍历当前数组
+                    Array.prototype.method1 = function () {
+                        var arr = [];    //定义一个临时数组
+                        for (var i = 0; i < this.length; i++) {    //循环遍历当前数组
                             //判断当前数组下标为i的元素是否已经保存到临时数组
                             //如果已保存，则跳过，否则将此元素保存到临时数组中
-                            if(arr.indexOf(this[i]) == -1){
+                            if (arr.indexOf(this[i]) == -1) {
                                 arr.push(this[i]);
                             }
                         }
@@ -158,8 +155,8 @@ router.post('/getMyProject', async (ctx)=>{
                     }
                     resArr = tempArr2.method1()
                     console.log(resArr)
-                    let resArr2=[]
-                    for(const item of resArr){
+                    let resArr2 = []
+                    for (const item of resArr) {
                         let query = `select * from MatchInfo where id=${item}`
                         let tempRes = await db.find(query)
                         tempRes[0].matchOptions = JSON.parse(tempRes[0].matchOptions)
@@ -305,7 +302,7 @@ router.post('/joinProject', async (ctx) => {
                 let res2 = await db.find(query3)
                 let res3 = await db.find(query4)
                 console.log(res, res2, res3)
-                let newObj={}
+                let newObj = {}
                 res[0].matchOptions = JSON.parse(res[0].matchOptions)
                 newObj.matchInfo = res[0]
                 newObj.projectInfo = res2
@@ -325,7 +322,7 @@ router.post('/joinProject', async (ctx) => {
 
 })
 
-router.post('/checkProject',async (ctx)=>{
+router.post('/checkProject', async (ctx) => {
     let req = ctx.request.body;
     let {
         code,
@@ -346,13 +343,13 @@ router.post('/checkProject',async (ctx)=>{
             try {
                 let result = await db.find(query2)
                 console.log(result.length)
-                if(result.length === 0){
-                    return ctx.sendError('101','该比赛不存在！')
-                }else{
-                    if(new Date()-new Date(result[0].startTime) >= 0){
+                if (result.length === 0) {
+                    return ctx.sendError('101', '该比赛不存在！')
+                } else {
+                    if (new Date() - new Date(result[0].startTime) >= 0) {
                         return ctx.send('true')
-                    }else{
-                        return ctx.sendError('101','该比赛未开始！')
+                    } else {
+                        return ctx.sendError('101', '该比赛未开始！')
                     }
                 }
             } catch (e) {
@@ -367,7 +364,7 @@ router.post('/checkProject',async (ctx)=>{
     }
 })
 
-router.post('/canICheckProject',async (ctx)=>{
+router.post('/canICheckProject', async (ctx) => {
     let req = ctx.request.body;
     let {
         code,
@@ -391,12 +388,12 @@ router.post('/canICheckProject',async (ctx)=>{
                 let isReadRank = JSON.parse(result1[0].matchOptions).readRank
                 let creatorID = result1[0].creatorID
                 // console.log(isReadRank,creatorID)
-                if(isReadRank){
+                if (isReadRank) {
                     ctx.send(true)
-                }else{
-                    if(creatorID !== result[0].id){
+                } else {
+                    if (creatorID !== result[0].id) {
                         ctx.send(false)
-                    }else{
+                    } else {
                         ctx.send(true)
                     }
                 }
