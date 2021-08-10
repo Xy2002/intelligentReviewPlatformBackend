@@ -93,7 +93,6 @@ router.post('/getProjectDetailInfo', async (ctx) => {
         let openid = res.openid
         let query = `SELECT id FROM User WHERE openid = "${openid}"`
         await db.find(query).then(async result => {
-            let userID = result[0].id
             let query2 = `SELECT * FROM MatchInfo WHERE id = "${matchID}"`
             try {
                 let res = await db.find(query2);
