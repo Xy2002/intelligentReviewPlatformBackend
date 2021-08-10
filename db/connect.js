@@ -1,6 +1,6 @@
 const mysql = require('mysql')
 
-let connection = mysql.createPool({
+let pool = mysql.createPool({
     connectionLimit : 10,
     host: 'localhost',
     user: 'root',
@@ -11,35 +11,27 @@ let connection = mysql.createPool({
 
 let db = {};
 
-connection.connect(function (err) {
-    if (err) {
-        console.error('连接失败: ' + err.stack);
-        return;
-    }
+pool.on('connection',function (connection) {
+    console.log(connection)
+})
 
-    console.log('连接成功 id ' + connection.threadId);
+
+pool.on('enqueue', function () {
+    console.log('Waiting for available connection slot');
 });
 
-connection.on("error", function (err) {
-    console.log("db error", err);
-    // 如果是连接断开，自动重新连接
-    if (err.code === "PROTOCOL_CONNECTION_LOST") {
-        connection.connect(function (err) {
-            if (err) {
-                console.error('连接失败: ' + err.stack);
-                return;
-            }
-            console.log('连接成功 id ' + connection.threadId);
-        });
-    } else {
-        throw err;
-    }
+pool.on('acquire', function (connection) {
+    console.log('Connection %d acquired', connection.threadId);
+});
+
+pool.on('release', function (connection) {
+    console.log('Connection %d released', connection.threadId);
 });
 
 //SELECT * FROM t_user WHERE username = "whg"
 db.find = (query) => {
     return new Promise((resolve, reject) => {
-        connection.query(query, (err, results, fields) => {
+        pool.query(query, (err, results, fields) => {
             if (err) {
                 reject(err);
             }
@@ -52,7 +44,7 @@ db.find = (query) => {
 //["lalla","bbbb"]
 db.insert = (query, values) => {
     return new Promise((resolve, reject) => {
-        connection.query(query, values, (err, results) => {
+        pool.query(query, values, (err, results) => {
             if (err) {
                 reject(err);
             }
@@ -64,7 +56,7 @@ db.insert = (query, values) => {
 //'DELETE FROM t_user  WHERE id = 1'
 db.delete = (query) => {
     return new Promise((resolve, reject) => {
-        connection.query(query, (err, results) => {
+        pool.query(query, (err, results) => {
             if (err) {
                 reject(err);
             }
@@ -76,7 +68,7 @@ db.delete = (query) => {
 //UPDATE t_user SET pass = "321" WHERE username = "whg"
 db.update = (query) => {
     return new Promise((resolve, reject) => {
-        connection.query(query, (err, results) => {
+        pool.query(query, (err, results) => {
             if (err) {
                 reject(err);
             }
